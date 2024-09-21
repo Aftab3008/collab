@@ -94,7 +94,7 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
               className="w-full text-sm py-4"
               disabled={pending}
             >
-              Continue
+              Sign in
             </Button>
           </form>
         </Form>

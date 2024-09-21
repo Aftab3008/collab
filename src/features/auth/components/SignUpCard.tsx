@@ -121,7 +121,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
               className="w-full text-sm py-4"
               disabled={form.formState.isSubmitting || pending}
             >
-              Continue
+              Sign up
             </Button>
           </form>
         </Form>
