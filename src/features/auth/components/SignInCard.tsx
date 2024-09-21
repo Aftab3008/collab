@@ -11,7 +11,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -25,15 +24,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SignInSchema } from "@/lib/ZodSchema";
-
+import { useAuthActions } from "@convex-dev/auth/react";
 interface SignInCardProps {
-  // eslint-disable-next-line no-unused-vars
   setState: (state: SignInFlow) => void;
 }
 
 export const SignInCard = ({ setState }: SignInCardProps) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { signIn } = useAuthActions();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const form = useForm<z.infer<typeof SignInSchema>>({
@@ -44,9 +41,31 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof SignInSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof SignInSchema>) {
+    try {
+      setPending(true);
+      await signIn("password", {
+        email: values.email,
+        password: values.password,
+        flow: "signIn",
+      });
+    } catch (error) {
+      setError("Invalid email or password");
+    } finally {
+      setPending(false);
+    }
   }
+
+  const handleProviderSignIn = (value: "github" | "google") => {
+    try {
+      setPending(true);
+      signIn(value);
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <Card className="h-full w-full p-8">
@@ -101,7 +120,7 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
         <Separator />
         <div className="flex flex-col gap-y-2.5">
           <Button
-            onClick={() => {}}
+            onClick={() => handleProviderSignIn("google")}
             variant="outline"
             size="lg"
             disabled={pending}
@@ -111,7 +130,7 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
             Continue with Google
           </Button>
           <Button
-            onClick={() => {}}
+            onClick={() => handleProviderSignIn("github")}
             variant="outline"
             size="lg"
             disabled={pending}

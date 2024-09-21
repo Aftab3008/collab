@@ -25,12 +25,16 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { SignInFlow } from "@/types";
 import { SignUpSchema } from "@/lib/ZodSchema";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { useRouter } from "next/navigation";
 
 interface SignUpCardProps {
   setState: (state: SignInFlow) => void;
 }
 
 export const SignUpCard = ({ setState }: SignUpCardProps) => {
+  const { signIn } = useAuthActions();
+  const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const form = useForm<z.infer<typeof SignUpSchema>>({
@@ -43,9 +47,33 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof SignUpSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof SignUpSchema>) {
+    try {
+      setPending(true);
+      await signIn("password", {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        flow: "signUp",
+      });
+      router.replace("/");
+    } catch (error) {
+      setError("Something went wrong");
+    } finally {
+      setPending(false);
+    }
   }
+  const handleProviderSignUp = (value: "github" | "google") => {
+    try {
+      setPending(true);
+      signIn(value);
+      router.replace("/");
+    } catch (error) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <Card className="h-full w-full p-8">
@@ -128,7 +156,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
         <Separator />
         <div className="flex flex-col gap-y-1.5">
           <Button
-            onClick={() => {}}
+            onClick={() => handleProviderSignUp("google")}
             variant="outline"
             size="lg"
             disabled={pending}
@@ -138,7 +166,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
             Continue with Google
           </Button>
           <Button
-            onClick={() => {}}
+            onClick={() => handleProviderSignUp("github")}
             variant="outline"
             size="lg"
             disabled={pending}
